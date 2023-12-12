@@ -1,4 +1,4 @@
-package pw3;
+package pw3.utils;
 
 import java.util.*;
 
