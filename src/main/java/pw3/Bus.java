@@ -11,7 +11,7 @@ import static java.lang.Thread.sleep;
 public class Bus {
     private final int busNumber;
     private double essenceAmount;
-    private static double RESERVOIRE_SIZE;
+    private final double RESERVOIRE_SIZE;
     private LinkedHashMap<String, Integer> busTrajectory = new LinkedHashMap<>();
     private boolean communicationIssue; //peut etre enlever, trouver une autre manière?
     private int delay;
@@ -35,7 +35,8 @@ public class Bus {
     }
 
     public void reFillingGas() throws InterruptedException {
-        //sleep(5);
+        delay += 5000;
+        sleep(5000);
         essenceAmount = RESERVOIRE_SIZE;
     }
 
@@ -66,13 +67,17 @@ public class Bus {
     }
 
     public void start() throws InterruptedException {
+        //commence par remplire son essence, mais ajouter le fait que genre 1 fois sur 5 il puisse oublier.
         for (Map.Entry<String, Integer> entry : busTrajectory.entrySet()) {
             sleep(entry.getValue());
+            // faire perdre par rapport à distance parrcourrue
             essenceAmount--;
             if(essenceAmount > 0) {
-                System.out.println("Bus " + busNumber + " reached " + entry.getKey());
+                System.out.println("Bus " + busNumber + " reached " + entry.getKey() + " gas left: " + essenceAmount + " delay of " + delay);
             }else{
-                System.out.println("No more gas left");
+                System.out.println("No more gas left, refilling...");
+                reFillingGas();
+                System.out.println("Bus " + busNumber + " reached " + entry.getKey());
             }
         }
     }
