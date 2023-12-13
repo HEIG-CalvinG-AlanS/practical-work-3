@@ -1,3 +1,4 @@
+/*
 package ch.heigvd.emitters;
 
 import picocli.CommandLine;
@@ -37,3 +38,4 @@ public abstract class AbstractEmitter implements Callable<Integer> {
         dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     }
 }
+*/
