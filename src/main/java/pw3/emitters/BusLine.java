@@ -74,24 +74,43 @@ public class BusLine {
     }
 
 
-    public static class Bus {
+    public static class Bus extends Thread {
         private final int busNumber;
         private double gasolineAmount;
         private final double RESERVOIRE_SIZE;
-        private final int TIME_TO_REFILL = 5;
+        private static final int TIME_TO_REFILL = 5000;
 
-        private boolean communicationIssue; //peut etre enlever, trouver une autre manière?
+        String messageTemplate = "BUS %d %s %d";
+
+        private String datagram;
+
+        BusState state;
         private int delay;
+
+
+        public enum BusState {
+            FIRE(8000), JAM(3000), ACCIDENT(9000), TIRE(7000), GAS(TIME_TO_REFILL), ALIVE(0);
+
+            private final int eventTime;
+
+            BusState(int time) {
+                this.eventTime = time;
+            }
+
+            public int getEventTime() {
+                return eventTime;
+            }
+        }
 
         public Bus(int bNumber, double rSize) {
             busNumber = bNumber;
             RESERVOIRE_SIZE = rSize;
-            communicationIssue = false;
             delay = 0;
             gasolineAmount = RESERVOIRE_SIZE;
+            state = BusState.ALIVE;
         }
 
-        // refille the gas tank
+        // refill the gas tank
         public void reFillingGas() throws InterruptedException {
             delay += TIME_TO_REFILL;
             sleep(TIME_TO_REFILL);
@@ -110,29 +129,67 @@ public class BusLine {
             gasolineAmount -= time / 1000 / 2;
         }
 
-        //pe utiliser threads pour commencer le parcours
-        public void start() throws InterruptedException {
-            delay = 0;
+        @Override
+        public void run() {
+            while (true) {
 
-            if (!forgetToRefill()) {
-                System.out.println("Refilling at the beginning");
-                reFillingGas();
-            }
-
-            for (Map.Entry<String, Integer> entry : busTrajectory.entrySet()) {
-                sleep(entry.getValue());
-                reducingGasoline(entry.getValue());
-
-                if (gasolineAmount > 0) {
-                    System.out.println("Bus " + busNumber + " reached " + entry.getKey() + " gasoline: " + gasolineAmount);
-                } else {
-                    System.out.println("No more gas left. Refilling...");
-                    reFillingGas();
-                    System.out.println("Bus " + busNumber + " reached " + entry.getKey() + " gasoline: " + gasolineAmount);
+                if (!forgetToRefill()) {
+                    try {
+                        System.out.println("BUS " + busNumber + " refilling at the beginning");
+                        reFillingGas();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
+
+                delay = 0;
+
+                for (Map.Entry<String, Integer> entry : busTrajectory.entrySet()) {
+                    try {
+                        sleep(entry.getValue());
+
+                        reducingGasoline(entry.getValue());
+
+                        if (triggerEvent()) {
+                            System.out.println(getRandomEvent());
+                            waitEndEvent();
+                        }
+
+                        if (gasolineAmount <= 0) {
+                            System.out.println("BUS " + busNumber + " " + state + " " + delay);
+                            reFillingGas();
+                        }
+                        state = BusState.ALIVE;
+                        System.out.println("BUS " + busNumber + " " + state + " " + delay);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                System.out.println("BUS" + busNumber + " end of course, delay of " + delay);
             }
-            System.out.println("End of course, delay of " + delay);
-            delay = 0;
+        }
+
+        public void waitEndEvent() throws InterruptedException {
+            sleep(state.getEventTime());
+        }
+
+        public boolean triggerEvent() {
+            Random random = new Random();
+            int randomNumber = random.nextInt(5) + 1;
+
+            return randomNumber == 1;
+        }
+
+        public String getRandomEvent() throws InterruptedException {
+            BusState[] states = BusState.values();
+            Random random = new Random();
+            state = states[random.nextInt(states.length - 2)]; //pour enlever le alive et le gas, qui sont gerés ailleur
+
+            delay += state.getEventTime();
+            return "BUS " + busNumber + " " + state + " " + delay;
         }
     }
 }
+
+
+
