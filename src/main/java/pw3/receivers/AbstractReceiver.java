@@ -1,4 +1,4 @@
-/*package ch.heigvd.receivers;
+package pw3.receivers;
 
 import picocli.CommandLine;
 
@@ -8,7 +8,5 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Callable;
 
 public abstract class AbstractReceiver implements Callable<Integer> {
-    @CommandLine.ParentCommand
-    protected ch.heigvd.Main parent;
+
 }
-*/

@@ -1,4 +1,5 @@
-/*package ch.heigvd.receivers;
+package pw3.receivers;
+
 
 import picocli.CommandLine;
 
@@ -6,17 +7,12 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 
 @CommandLine.Command(
-        name = "multicast-receiver",
+        name = "bus-station-receiver",
         description = "Start an UDP multicast receiver"
 )
-public class MulticastReceiver extends AbstractReceiver {
-    @CommandLine.Option(
-            names = {"-H", "--host"},
-            description = "Subnet range/multicast address to use.",
-            required = true,
-            scope = CommandLine.ScopeType.INHERIT
-    )
-    protected String host;
+public class BusStationReceiver extends AbstractReceiver {
+
+    protected String host = "239.0.0.1";
 
     @CommandLine.Option(
             names = {"-i", "--interface"},
@@ -26,14 +22,16 @@ public class MulticastReceiver extends AbstractReceiver {
     )
     private String interfaceName;
 
+    private static final int PORT = 1234;
+
     @Override
     public Integer call() {
-        try (MulticastSocket socket = new MulticastSocket(parent.getPort())) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + parent.getPort();
+        try (MulticastSocket socket = new MulticastSocket(PORT)) {
+            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + PORT;
             System.out.println("Multicast receiver started (" + myself + ")");
 
             InetAddress multicastAddress = InetAddress.getByName(host);
-            InetSocketAddress group = new InetSocketAddress(multicastAddress, parent.getPort());
+            InetSocketAddress group = new InetSocketAddress(multicastAddress, PORT);
             NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
             socket.joinGroup(group, networkInterface);
 
@@ -64,4 +62,4 @@ public class MulticastReceiver extends AbstractReceiver {
         }
     }
 }
-*/
+
