@@ -1,4 +1,4 @@
-package ch.heigvd.receivers;
+/*package ch.heigvd.receivers;
 
 import picocli.CommandLine;
 
@@ -11,3 +11,4 @@ public abstract class AbstractReceiver implements Callable<Integer> {
     @CommandLine.ParentCommand
     protected ch.heigvd.Main parent;
 }
+*/

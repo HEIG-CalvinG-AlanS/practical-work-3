@@ -1,4 +1,4 @@
-package ch.heigvd.receivers;
+/*package ch.heigvd.receivers;
 
 import picocli.CommandLine;
 
@@ -64,3 +64,4 @@ public class MulticastReceiver extends AbstractReceiver {
         }
     }
 }
+*/

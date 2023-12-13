@@ -1,4 +1,4 @@
-package ch.heigvd.receivers;
+/*package ch.heigvd.receivers;
 
 import picocli.CommandLine.Command;
 
@@ -43,3 +43,4 @@ public class UnicastReceiver extends AbstractReceiver {
         }
     }
 }
+*/

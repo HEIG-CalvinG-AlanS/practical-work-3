@@ -1,4 +1,4 @@
-package ch.heigvd.emitters;
+/*package ch.heigvd.emitters;
 
 import picocli.CommandLine.Command;
 
@@ -59,3 +59,4 @@ public class UnicastEmitter extends AbstractEmitter {
         return 0;
     }
 }
+*/
