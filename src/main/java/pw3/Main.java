@@ -2,8 +2,9 @@ package pw3;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import pw3.emitters.BusController;
 import pw3.emitters.BusLineEmitter;
-import pw3.receivers.BusStationReceiver;
+import pw3.receivers.BusStation;
 
 import static java.lang.Thread.sleep;
 
@@ -12,7 +13,8 @@ import static java.lang.Thread.sleep;
         version = "1.0.0",
         subcommands = {
                 BusLineEmitter.class,
-                BusStationReceiver.class
+                BusStation.class,
+                BusController.class
         },
         scope = CommandLine.ScopeType.INHERIT,
         mixinStandardHelpOptions = true
