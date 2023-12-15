@@ -16,8 +16,13 @@ import java.util.concurrent.TimeUnit;
         description = "Start an UDP multicast receiver"
 )
 public class BusStation extends AbstractEmitter {
-
-    protected String hostMulti = "239.0.0.1";
+    @CommandLine.Option(
+            names = {"-H", "--host"},
+            description = "Subnet range/multicast address to use.",
+            scope = CommandLine.ScopeType.INHERIT,
+            required = true
+    )
+    protected String host;
 
     @CommandLine.Option(
             names = {"-i", "--interface"},
@@ -48,7 +53,7 @@ public class BusStation extends AbstractEmitter {
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + multicastPort;
             System.out.println("Multicast receiver started (" + myself + ")");
 
-            InetAddress multicastAddress = InetAddress.getByName(hostMulti);
+            InetAddress multicastAddress = InetAddress.getByName(host);
             InetSocketAddress group = new InetSocketAddress(multicastAddress, multicastPort);
             NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
             socket.joinGroup(group, networkInterface);
