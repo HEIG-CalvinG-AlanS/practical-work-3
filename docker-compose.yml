@@ -37,11 +37,11 @@ services:
       - bus-601
       - bus-602
 
-  bus-controller-emitter:
+  bus-controller:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
     command:
-      - bus-controller-emitter
+      - bus-controller
+      - --host=bus-station
       - --port=1234
-      - --host=localhost
-      - --delay=0
-      - --frequency=4000
+    depends_on:
+      - bus-station
