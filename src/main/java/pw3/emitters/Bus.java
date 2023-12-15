@@ -36,10 +36,10 @@ public class Bus extends AbstractEmitter {
     private String interfaceName;
 
     @CommandLine.Option(
-            names = {"-p", "--port"},
-            description = "Port to use.",
-            scope = CommandLine.ScopeType.INHERIT,
-            required = true
+            names = {"-mp", "--multicast-port"},
+            description = "Port to use for multicast (default: 9876).",
+            defaultValue = "9876",
+            scope = CommandLine.ScopeType.INHERIT
     )
     private int port;
 
