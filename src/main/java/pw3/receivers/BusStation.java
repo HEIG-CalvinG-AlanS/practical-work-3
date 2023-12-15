@@ -7,9 +7,9 @@ import pw3.emitters.AbstractEmitter;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalTime;
+import java.util.Map;
+import java.util.concurrent.*;
 
 @CommandLine.Command(
         name = "bus-station",
@@ -48,6 +48,8 @@ public class BusStation extends AbstractEmitter {
     )
     protected int unicastPort;
 
+    private final ConcurrentHashMap<String, LocalTime> lastTimeBusesWereSeen = new ConcurrentHashMap<>();
+
     private void handleMulticast() {
         try (MulticastSocket socket = new MulticastSocket(multicastPort)) {
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + multicastPort;
@@ -74,7 +76,17 @@ public class BusStation extends AbstractEmitter {
                         packet.getLength(),
                         StandardCharsets.UTF_8
                 );
+
                 System.out.println("Multicast receiver (" + myself + ") received message: " + message);
+
+                String[] busInfo = message.split(" ");
+
+                String busName = busInfo[1];
+
+                // Store the bus name and the time it was seen
+                lastTimeBusesWereSeen.put(busName, LocalTime.now());
+
+                System.out.println(lastTimeBusesWereSeen);
             }
         } catch (Exception e) {
             e.printStackTrace();
