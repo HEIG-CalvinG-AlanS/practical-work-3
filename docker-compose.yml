@@ -3,6 +3,17 @@ networks:
     name: bus-station-network
 
 services:
+  bus-601:
+    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
+    command:
+      - bus
+      - --host=239.0.0.1
+      - --multicast-port=9876
+      - --interface=eth0
+      - --delay=0
+      - --name=601
+      - --frequency=3000
+
   bus-line-emitter:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
     command:
