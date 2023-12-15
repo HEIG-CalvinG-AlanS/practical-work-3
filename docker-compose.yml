@@ -1,0 +1,32 @@
+networks:
+  my-isolated-network:
+    name: bus-station-network
+
+services:
+  bus-line-emitter:
+    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
+    command:
+      - bus-line-emitter
+      - --port=9876
+      - --interface=eth6
+      - --delay=0
+      - --frequency=3000
+
+  bus-station:
+    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
+    command:
+      - bus-station
+      - --interface=eth6
+      - --port=9876 # Port pour la réception multicast
+    depends_on:
+      - bus-controller-emitter
+      - bus-line-emitter
+
+  bus-controller-emitter:
+    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
+    command:
+      - bus-controller-emitter
+      - --port=1234
+      - --host=localhost
+      - --delay=0
+      - --frequency=4000
