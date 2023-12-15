@@ -3,7 +3,7 @@ package pw3;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import pw3.emitters.BusController;
-import pw3.emitters.BusEmitter;
+import pw3.emitters.Bus;
 import pw3.receivers.BusStation;
 
 import static java.lang.Thread.sleep;
@@ -12,7 +12,7 @@ import static java.lang.Thread.sleep;
         description = "Practical content of the Java UDP programming chapter",
         version = "1.0.0",
         subcommands = {
-                BusEmitter.class,
+                Bus.class,
                 BusStation.class,
                 BusController.class
         },

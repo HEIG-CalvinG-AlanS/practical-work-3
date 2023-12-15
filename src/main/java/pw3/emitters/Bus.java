@@ -13,12 +13,12 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Thread.sleep;
 
 @CommandLine.Command(
-        name = "bus-emitter",
+        name = "bus",
         description = "Start an UDP multicast emitter"
 )
 
 //faire javadoc à la place de simple comm
-public class BusEmitter extends AbstractEmitter {
+public class Bus extends AbstractEmitter {
 
     protected String host = "239.0.0.1";
 
@@ -42,11 +42,11 @@ public class BusEmitter extends AbstractEmitter {
     private static final LinkedHashMap<String, Integer> busTrajectory = new LinkedHashMap<>();
     private final ArrayList<Bus> busRunningTheLine = new ArrayList<>();
 
-    public BusEmitter() {
+    public Bus() {
 
     }
 
-    public BusEmitter(int lNumber) {
+    public Bus(int lNumber) {
         lineNumber = lNumber;
     }
 
@@ -149,7 +149,7 @@ public class BusEmitter extends AbstractEmitter {
     }
 
 
-    public static class Bus extends Thread {
+    public static class BusDetails extends Thread {
         private final int busNumber;
         private double gasolineAmount;
         private final double RESERVOIRE_SIZE;
@@ -177,7 +177,7 @@ public class BusEmitter extends AbstractEmitter {
             }
         }
 
-        public Bus(int bNumber, double rSize) {
+        public BusDetails(int bNumber, double rSize) {
             busNumber = bNumber;
             RESERVOIRE_SIZE = rSize;
             delay = 0;
