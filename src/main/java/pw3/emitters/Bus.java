@@ -19,8 +19,13 @@ import static java.lang.Thread.sleep;
 
 //faire javadoc à la place de simple comm
 public class Bus extends AbstractEmitter {
-
-    protected String host = "239.0.0.1";
+    @CommandLine.Option(
+            names = {"-H", "--host"},
+            description = "Subnet range/multicast address to use.",
+            scope = CommandLine.ScopeType.INHERIT,
+            required = true
+    )
+    protected String host;
 
     @CommandLine.Option(
             names = {"-i", "--interface"},
