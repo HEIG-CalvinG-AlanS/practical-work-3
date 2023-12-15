@@ -43,6 +43,14 @@ public class Bus extends AbstractEmitter {
     )
     private int port;
 
+    @CommandLine.Option(
+            names = {"-n", "--name"},
+            description = "Name/line of the bus",
+            scope = CommandLine.ScopeType.INHERIT,
+            required = true
+    )
+    private String name;
+
     private int lineNumber;
     private static final LinkedHashMap<String, Integer> busTrajectory = new LinkedHashMap<>();
     private final ArrayList<Bus> busRunningTheLine = new ArrayList<>();
@@ -69,7 +77,7 @@ public class Bus extends AbstractEmitter {
             ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
             scheduler.scheduleAtFixedRate(() -> {
                 try {
-                    String message = "Hello, Bonjour!";
+                    String message = "BUS " + name;
 
                     byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
