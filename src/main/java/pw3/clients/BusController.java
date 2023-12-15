@@ -1,23 +1,20 @@
-package pw3.emitters;
+package pw3.clients;
 
 import picocli.CommandLine.Command;
-import pw3.emitters.AbstractEmitter;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Command(
-        name = "bus-controller-emitter",
-        description = "Start an UDP unicast emitter"
+        name = "bus-controller",
+        description = "Start an UDP unicast client"
 )
-public class BusController extends AbstractEmitter {
+public class BusController {
 
     private static final int PORT = 1234;
     private static final String HOST = "localhost";

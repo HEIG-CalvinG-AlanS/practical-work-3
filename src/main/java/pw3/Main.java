@@ -2,7 +2,7 @@ package pw3;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import pw3.emitters.BusController;
+import pw3.clients.BusController;
 import pw3.emitters.Bus;
 import pw3.receivers.BusStation;
 
