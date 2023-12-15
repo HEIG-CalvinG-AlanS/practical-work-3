@@ -7,10 +7,13 @@ import pw3.emitters.AbstractEmitter;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+//limiter la création à 10 bus par lines
 @CommandLine.Command(
         name = "bus-station",
         description = "Start an UDP multicast receiver"
@@ -71,6 +74,22 @@ public class BusStation extends AbstractEmitter {
     private static final int PORT_UNI = 1234;
     private static final String HOST_UNI = "localhost";
 
+    private String testStringBeforeReceiving2 = "LINE 102 BUS 3 ALIVE 2000 BUS 7 TIRE 4000";
+
+    Map<String,String> stateOfBusLines = new HashMap<>();
+
+    public String[] busSeparator(String s){
+        return s.split(" ");
+    }
+
+    public void addChangesToMap(String[] s){
+        for (int i = 0; i < s.length - 4; i += 4) {
+            String key = s[0] + " " + s[1] + " " + s[i + 2] + " " + s[i + 3];
+            String value = s[i + 4] + " " + s[i + 5];
+            stateOfBusLines.put(key, value);
+        }
+    }
+
     private void handleReceiverUnicast() {
         // Logique pour gérer la réception Unicast
         try (DatagramSocket socket = new DatagramSocket(PORT_UNI)) {
@@ -78,6 +97,14 @@ public class BusStation extends AbstractEmitter {
             System.out.println("Unicast receiver started (" + myself + ")");
 
             byte[] receiveData = new byte[1024];
+
+            String[] t = busSeparator(testStringBeforeReceiving2);
+
+            addChangesToMap(t);
+
+            for (Map.Entry<String, String> entry : stateOfBusLines.entrySet()) {
+                System.out.println(entry.getKey() + " | " + entry.getValue());
+            }
 
             while (true) {
                 DatagramPacket packet = new DatagramPacket(
@@ -103,7 +130,7 @@ public class BusStation extends AbstractEmitter {
 
 
 
-    private void handleEmitterUnicast() {
+    private void handleEmitterUnicast() {/*
         try (DatagramSocket socket = new DatagramSocket()) {
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + PORT_UNI;
             System.out.println("Unicast emitter started (" + myself + ")");
@@ -135,6 +162,7 @@ public class BusStation extends AbstractEmitter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        */
     }
 
     @Override
