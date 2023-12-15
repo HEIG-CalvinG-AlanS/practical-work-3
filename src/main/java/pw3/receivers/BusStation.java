@@ -28,20 +28,28 @@ public class BusStation extends AbstractEmitter {
     private String interfaceName;
 
     @CommandLine.Option(
-            names = {"-p", "--port"},
-            description = "port to use.",
-            scope = CommandLine.ScopeType.INHERIT,
-            required = true
+            names = {"-mp", "--multicast-port"},
+            description = "Port to use for multicast (default: 9876).",
+            defaultValue = "9876",
+            scope = CommandLine.ScopeType.INHERIT
     )
-    private int portMulti;
+    protected int multicastPort;
+
+    @CommandLine.Option(
+            names = {"-up", "--unicast-port"},
+            description = "Port to use for unicast (default: 1234).",
+            defaultValue = "1234",
+            scope = CommandLine.ScopeType.INHERIT
+    )
+    protected int unicastPort;
 
     private void handleMulticast() {
-        try (MulticastSocket socket = new MulticastSocket(portMulti)) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + portMulti;
+        try (MulticastSocket socket = new MulticastSocket(multicastPort)) {
+            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + multicastPort;
             System.out.println("Multicast receiver started (" + myself + ")");
 
             InetAddress multicastAddress = InetAddress.getByName(hostMulti);
-            InetSocketAddress group = new InetSocketAddress(multicastAddress, portMulti);
+            InetSocketAddress group = new InetSocketAddress(multicastAddress, multicastPort);
             NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
             socket.joinGroup(group, networkInterface);
 
@@ -68,13 +76,12 @@ public class BusStation extends AbstractEmitter {
         }
     }
 
-    private static final int PORT_UNI = 1234;
     private static final String HOST_UNI = "localhost";
 
     private void handleReceiverUnicast() {
         // Logique pour gérer la réception Unicast
-        try (DatagramSocket socket = new DatagramSocket(PORT_UNI)) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + PORT_UNI;
+        try (DatagramSocket socket = new DatagramSocket(unicastPort)) {
+            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
             System.out.println("Unicast receiver started (" + myself + ")");
 
             byte[] receiveData = new byte[1024];
@@ -105,7 +112,7 @@ public class BusStation extends AbstractEmitter {
 
     private void handleEmitterUnicast() {
         try (DatagramSocket socket = new DatagramSocket()) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + PORT_UNI;
+            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
             System.out.println("Unicast emitter started (" + myself + ")");
 
             InetAddress serverAddress = InetAddress.getByName(HOST_UNI);
@@ -121,7 +128,7 @@ public class BusStation extends AbstractEmitter {
                             payload,
                             payload.length,
                             serverAddress,
-                            PORT_UNI
+                            unicastPort
                     );
 
                     socket.send(datagram);
