@@ -76,9 +76,7 @@ public class BusStation extends AbstractEmitter {
         }
     }
 
-    private static final String HOST_UNI = "localhost";
-
-    private void handleReceiverUnicast() {
+    private void handleUnicast() {
         // Logique pour gérer la réception Unicast
         try (DatagramSocket socket = new DatagramSocket(unicastPort)) {
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
@@ -108,56 +106,17 @@ public class BusStation extends AbstractEmitter {
         }
     }
 
-
-
-    private void handleEmitterUnicast() {
-        try (DatagramSocket socket = new DatagramSocket()) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
-            System.out.println("Unicast emitter started (" + myself + ")");
-
-            InetAddress serverAddress = InetAddress.getByName(HOST_UNI);
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-            scheduler.scheduleAtFixedRate(() -> {
-                try {
-                    String message = "Hello, from bus station emitter! (" + myself + ")";
-
-                    byte[] payload = message.getBytes(StandardCharsets.UTF_8);
-
-                    DatagramPacket datagram = new DatagramPacket(
-                            payload,
-                            payload.length,
-                            serverAddress,
-                            unicastPort
-                    );
-
-                    socket.send(datagram);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }, delay, frequency, TimeUnit.MILLISECONDS);
-
-            // Keep the program running for a while
-            scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public Integer call() {
         Thread multicastThread = new Thread(this::handleMulticast);
-        Thread unicastReceiverThread = new Thread(this::handleReceiverUnicast);
-        Thread unicastEmitterThread = new Thread(this::handleEmitterUnicast);
+        Thread unicastThread = new Thread(this::handleUnicast);
 
         multicastThread.start();
-        unicastReceiverThread.start();
-        unicastEmitterThread.start();
+        unicastThread.start();
 
         try {
             multicastThread.join();
-            unicastReceiverThread.join();
-            unicastEmitterThread.join();
+            unicastThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
             return 1;
