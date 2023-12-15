@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -117,6 +118,17 @@ public class BusStation extends AbstractEmitter {
                 );
 
                 System.out.println("Unicast receiver (" + myself + ") received message: " + message);
+
+                String responseMessage = Arrays.toString(lastTimeBusesWereSeen.entrySet().toArray());
+
+                DatagramPacket response = new DatagramPacket(
+                        responseMessage.getBytes(StandardCharsets.UTF_8),
+                        responseMessage.length(),
+                        packet.getAddress(),
+                        packet.getPort()
+                );
+
+                socket.send(response);
             }
         } catch (Exception e) {
             e.printStackTrace();
