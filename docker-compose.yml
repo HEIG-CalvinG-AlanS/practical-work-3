@@ -37,15 +37,6 @@ services:
       - bus-601
       - bus-602
 
-  bus-line-emitter:
-    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
-    command:
-      - bus-line-emitter
-      - --port=9876
-      - --interface=eth6
-      - --delay=0
-      - --frequency=3000
-
   bus-controller-emitter:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
     command:
