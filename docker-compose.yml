@@ -25,6 +25,18 @@ services:
       - --name=602
       - --frequency=3000
 
+  bus-station:
+    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
+    command:
+      - bus-station
+      - --host=239.0.0.1
+      - --multicast-port=9876
+      - --unicast-port=1234
+      - --interface=eth0
+    depends_on:
+      - bus-601
+      - bus-602
+
   bus-line-emitter:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
     command:
@@ -33,16 +45,6 @@ services:
       - --interface=eth6
       - --delay=0
       - --frequency=3000
-
-  bus-station:
-    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
-    command:
-      - bus-station
-      - --interface=eth6
-      - --port=9876 # Port pour la réception multicast
-    depends_on:
-      - bus-controller-emitter
-      - bus-line-emitter
 
   bus-controller-emitter:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
