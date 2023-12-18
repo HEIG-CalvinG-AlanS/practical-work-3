@@ -49,7 +49,7 @@ public class BusStation extends AbstractEmitter {
     )
     protected int unicastPort;
 
-    private final ConcurrentHashMap<String, LocalTime> lastTimeBusesWereSeen = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, String> lastTimeBusesWereSeen = new ConcurrentHashMap<>();
 
     private void handleMulticast() {
         try (MulticastSocket socket = new MulticastSocket(multicastPort)) {
@@ -83,9 +83,10 @@ public class BusStation extends AbstractEmitter {
                 String[] busInfo = message.split(" ");
 
                 String busName = busInfo[1];
+                String busState = busInfo[2] + " " + busInfo[3];
 
-                // Store the bus name and the time it was seen
-                lastTimeBusesWereSeen.put(busName, LocalTime.now());
+                // Store the bus name and the state with time it was seen
+                lastTimeBusesWereSeen.put(busName, busState);
 
                 System.out.println(lastTimeBusesWereSeen);
             }
@@ -119,7 +120,10 @@ public class BusStation extends AbstractEmitter {
 
                 System.out.println("Unicast receiver (" + myself + ") received message: " + message);
 
-                String responseMessage = Arrays.toString(lastTimeBusesWereSeen.entrySet().toArray());
+                String responseMessage = "";
+                for (String name: lastTimeBusesWereSeen.keySet())
+                    responseMessage += name.toString() + " " + lastTimeBusesWereSeen.get(name).toString() + ',';
+                responseMessage = responseMessage.substring(0, responseMessage.length() - 1);
 
                 DatagramPacket response = new DatagramPacket(
                         responseMessage.getBytes(StandardCharsets.UTF_8),
