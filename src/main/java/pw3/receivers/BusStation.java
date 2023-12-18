@@ -1,17 +1,15 @@
 package pw3.receivers;
 
-
 import picocli.CommandLine;
 import pw3.emitters.AbstractEmitter;
-
-import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.*;
 
+/**
+ * Represents a UDP multicast and unicast receiver for bus station data.
+ * This class handles receiving data about bus statuses and updates a concurrent map with the latest information.
+ */
 @CommandLine.Command(
         name = "bus-station",
         description = "Start an UDP multicast receiver"
@@ -49,8 +47,24 @@ public class BusStation extends AbstractEmitter {
     )
     protected int unicastPort;
 
+    // Concurrent map to store the last time buses were seen
     private final ConcurrentHashMap<String, String> lastTimeBusesWereSeen = new ConcurrentHashMap<>();
 
+    /**
+     * Adds a new entry in the map of buses.
+     *
+     * @param s An array of strings containing bus information.
+     */
+    public void addChangesToMap(String[] s){
+        String key = s[0] + " " + s[1] + " " + s[2] + " " + s[3];
+        String value = s[4] + " " + s[5];
+        lastTimeBusesWereSeen.put(key, value);
+    }
+
+    /**
+     * Handles the multicast reception of bus data.
+     * This method sets up a multicast socket and continuously listens for incoming data, updating the map accordingly.
+     */
     private void handleMulticast() {
         try (MulticastSocket socket = new MulticastSocket(multicastPort)) {
             String myself = InetAddress.getLocalHost().getHostAddress() + ":" + multicastPort;
@@ -80,21 +94,63 @@ public class BusStation extends AbstractEmitter {
 
                 System.out.println("Multicast receiver (" + myself + ") received message: " + message);
 
-                String[] busInfo = message.split(" ");
-
-                String busName = busInfo[1];
-                String busState = busInfo[2] + " " + busInfo[3];
-
-                // Store the bus name and the state with time it was seen
-                lastTimeBusesWereSeen.put(busName, busState);
-
-                System.out.println(lastTimeBusesWereSeen);
+                addChangesToMap(message.split(" "));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+
+    /**
+     * Processes a unicast message and generates a response based on the current state of buses.
+     *
+     * This method parses the received message to determine the command (ALL, LINE, BUS) and
+     * optionally the line and bus numbers. It then constructs a response string based on the
+     * command and the data stored in the map of last seen times for buses.
+     *
+     * @param message The received message string to process.
+     * @return A response string to be sent back to the requester.
+     */
+    private String sendResponseUnicast(String message) {
+        // Get command and arguments
+        String[] msg = message.split(" ");
+        String command = msg[0];
+        String line = "";
+        String bus = "";
+        if(msg.length >= 2) line = msg[1];
+        if(msg.length >= 3) bus = msg[2];
+
+        // Add response to the requester
+        String responseMessage = "OK ";
+
+        // Determine the response based on the commmand
+        switch (command) {
+            case "ALL":
+                for (String name: lastTimeBusesWereSeen.keySet())
+                    responseMessage += name + " " + lastTimeBusesWereSeen.get(name) + ',';
+                if(!responseMessage.equals("OK "))
+                    responseMessage = responseMessage.substring(0, responseMessage.length() - 1);
+                break;
+            case "LINE":
+                for (String name : lastTimeBusesWereSeen.keySet())
+                    if(name.split(" ")[1].equals(line))
+                        responseMessage += name + " " + lastTimeBusesWereSeen.get(name) + ',';
+                break;
+            case "BUS":
+                for (String name: lastTimeBusesWereSeen.keySet())
+                    if(name.equals("LINE " + line + " BUS " + bus))
+                        responseMessage += name + " " + lastTimeBusesWereSeen.get(name) + ',';
+                break;
+        }
+
+        return responseMessage;
+    }
+
+    /**
+     * Handles the unicast reception of bus data.
+     * This method sets up a unicast socket and continuously listens for commands, responding based on the map's data.
+     */
     private void handleUnicast() {
         // Logique pour gérer la réception Unicast
         try (DatagramSocket socket = new DatagramSocket(unicastPort)) {
@@ -119,11 +175,7 @@ public class BusStation extends AbstractEmitter {
                 );
 
                 System.out.println("Unicast receiver (" + myself + ") received message: " + message);
-
-                String responseMessage = "";
-                for (String name: lastTimeBusesWereSeen.keySet())
-                    responseMessage += name.toString() + " " + lastTimeBusesWereSeen.get(name).toString() + ',';
-                responseMessage = responseMessage.substring(0, responseMessage.length() - 1);
+                String responseMessage = sendResponseUnicast(message);
 
                 DatagramPacket response = new DatagramPacket(
                         responseMessage.getBytes(StandardCharsets.UTF_8),
@@ -139,6 +191,11 @@ public class BusStation extends AbstractEmitter {
         }
     }
 
+    /**
+     * Main method to start multicast and unicast threads.
+     *
+     * @return Integer status code.
+     */
     @Override
     public Integer call() {
         Thread multicastThread = new Thread(this::handleMulticast);
