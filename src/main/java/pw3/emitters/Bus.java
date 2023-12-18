@@ -52,7 +52,15 @@ public class Bus extends AbstractEmitter {
             scope = CommandLine.ScopeType.INHERIT,
             required = true
     )
-    private String name;
+    private String lineName;
+
+    @CommandLine.Option(
+            names = {"-b", "--number"},
+            description = "Number/number of the bus",
+            scope = CommandLine.ScopeType.INHERIT,
+            required = true
+    )
+    private int busNumber;
     BusState state = BusState.ALIVE;
 
     private Duration accidentDuration;
@@ -92,7 +100,7 @@ public class Bus extends AbstractEmitter {
                         }
                     }
 
-                    String message = "BUS " + name + " " + state + " " + accidentEndTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                    String message = "LINE " + lineName + " BUS " + busNumber + " " + state + " " + accidentEndTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
                     byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
