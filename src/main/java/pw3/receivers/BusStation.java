@@ -7,17 +7,23 @@ import pw3.emitters.AbstractEmitter;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.*;
 
 @CommandLine.Command(
         name = "bus-station",
         description = "Start an UDP multicast receiver"
 )
 public class BusStation extends AbstractEmitter {
-
-    protected String hostMulti = "239.0.0.1";
+    @CommandLine.Option(
+            names = {"-H", "--host"},
+            description = "Subnet range/multicast address to use.",
+            scope = CommandLine.ScopeType.INHERIT,
+            required = true
+    )
+    protected String host;
 
     @CommandLine.Option(
             names = {"-i", "--interface"},
@@ -28,20 +34,30 @@ public class BusStation extends AbstractEmitter {
     private String interfaceName;
 
     @CommandLine.Option(
-            names = {"-p", "--port"},
-            description = "port to use.",
-            scope = CommandLine.ScopeType.INHERIT,
-            required = true
+            names = {"-mp", "--multicast-port"},
+            description = "Port to use for multicast (default: 9876).",
+            defaultValue = "9876",
+            scope = CommandLine.ScopeType.INHERIT
     )
-    private int portMulti;
+    protected int multicastPort;
+
+    @CommandLine.Option(
+            names = {"-up", "--unicast-port"},
+            description = "Port to use for unicast (default: 1234).",
+            defaultValue = "1234",
+            scope = CommandLine.ScopeType.INHERIT
+    )
+    protected int unicastPort;
+
+    private final ConcurrentHashMap<String, LocalTime> lastTimeBusesWereSeen = new ConcurrentHashMap<>();
 
     private void handleMulticast() {
-        try (MulticastSocket socket = new MulticastSocket(portMulti)) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + portMulti;
+        try (MulticastSocket socket = new MulticastSocket(multicastPort)) {
+            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + multicastPort;
             System.out.println("Multicast receiver started (" + myself + ")");
 
-            InetAddress multicastAddress = InetAddress.getByName(hostMulti);
-            InetSocketAddress group = new InetSocketAddress(multicastAddress, portMulti);
+            InetAddress multicastAddress = InetAddress.getByName(host);
+            InetSocketAddress group = new InetSocketAddress(multicastAddress, multicastPort);
             NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
             socket.joinGroup(group, networkInterface);
 
@@ -61,20 +77,27 @@ public class BusStation extends AbstractEmitter {
                         packet.getLength(),
                         StandardCharsets.UTF_8
                 );
+
                 System.out.println("Multicast receiver (" + myself + ") received message: " + message);
+
+                String[] busInfo = message.split(" ");
+
+                String busName = busInfo[1];
+
+                // Store the bus name and the time it was seen
+                lastTimeBusesWereSeen.put(busName, LocalTime.now());
+
+                System.out.println(lastTimeBusesWereSeen);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static final int PORT_UNI = 1234;
-    private static final String HOST_UNI = "localhost";
-
-    private void handleReceiverUnicast() {
+    private void handleUnicast() {
         // Logique pour gérer la réception Unicast
-        try (DatagramSocket socket = new DatagramSocket(PORT_UNI)) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + PORT_UNI;
+        try (DatagramSocket socket = new DatagramSocket(unicastPort)) {
+            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + unicastPort;
             System.out.println("Unicast receiver started (" + myself + ")");
 
             byte[] receiveData = new byte[1024];
@@ -95,43 +118,18 @@ public class BusStation extends AbstractEmitter {
                 );
 
                 System.out.println("Unicast receiver (" + myself + ") received message: " + message);
+
+                String responseMessage = Arrays.toString(lastTimeBusesWereSeen.entrySet().toArray());
+
+                DatagramPacket response = new DatagramPacket(
+                        responseMessage.getBytes(StandardCharsets.UTF_8),
+                        responseMessage.length(),
+                        packet.getAddress(),
+                        packet.getPort()
+                );
+
+                socket.send(response);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-    private void handleEmitterUnicast() {
-        try (DatagramSocket socket = new DatagramSocket()) {
-            String myself = InetAddress.getLocalHost().getHostAddress() + ":" + PORT_UNI;
-            System.out.println("Unicast emitter started (" + myself + ")");
-
-            InetAddress serverAddress = InetAddress.getByName(HOST_UNI);
-            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-            scheduler.scheduleAtFixedRate(() -> {
-                try {
-                    String message = "Hello, from bus station emitter! (" + myself + ")";
-
-                    byte[] payload = message.getBytes(StandardCharsets.UTF_8);
-
-                    DatagramPacket datagram = new DatagramPacket(
-                            payload,
-                            payload.length,
-                            serverAddress,
-                            PORT_UNI
-                    );
-
-                    socket.send(datagram);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }, delay, frequency, TimeUnit.MILLISECONDS);
-
-            // Keep the program running for a while
-            scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -140,17 +138,14 @@ public class BusStation extends AbstractEmitter {
     @Override
     public Integer call() {
         Thread multicastThread = new Thread(this::handleMulticast);
-        Thread unicastReceiverThread = new Thread(this::handleReceiverUnicast);
-        Thread unicastEmitterThread = new Thread(this::handleEmitterUnicast);
+        Thread unicastThread = new Thread(this::handleUnicast);
 
         multicastThread.start();
-        unicastReceiverThread.start();
-        unicastEmitterThread.start();
+        unicastThread.start();
 
         try {
             multicastThread.join();
-            unicastReceiverThread.join();
-            unicastEmitterThread.join();
+            unicastThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
             return 1;

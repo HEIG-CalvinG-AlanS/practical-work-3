@@ -3,30 +3,45 @@ networks:
     name: bus-station-network
 
 services:
-  bus-line-emitter:
+  bus-601:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
     command:
-      - bus-line-emitter
-      - --port=9876
-      - --interface=eth6
+      - bus
+      - --host=239.0.0.1
+      - --multicast-port=9876
+      - --interface=eth0
       - --delay=0
+      - --name=601
+      - --frequency=3000
+
+  bus-602:
+    image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
+    command:
+      - bus
+      - --host=239.0.0.1
+      - --multicast-port=9876
+      - --interface=eth0
+      - --delay=0
+      - --name=602
       - --frequency=3000
 
   bus-station:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
     command:
       - bus-station
-      - --interface=eth6
-      - --port=9876 # Port pour la réception multicast
+      - --host=239.0.0.1
+      - --multicast-port=9876
+      - --unicast-port=1234
+      - --interface=eth0
     depends_on:
-      - bus-controller-emitter
-      - bus-line-emitter
+      - bus-601
+      - bus-602
 
-  bus-controller-emitter:
+  bus-controller:
     image: ghcr.io/calvingraf1/practical-work-3-bus-station:1.0
     command:
-      - bus-controller-emitter
+      - bus-controller
+      - --host=bus-station
       - --port=1234
-      - --host=localhost
-      - --delay=0
-      - --frequency=4000
+    depends_on:
+      - bus-station
