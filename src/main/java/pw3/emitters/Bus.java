@@ -5,6 +5,9 @@ import picocli.CommandLine;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,6 +53,21 @@ public class Bus extends AbstractEmitter {
             required = true
     )
     private String name;
+    BusState state = BusState.ALIVE;
+
+    private Duration accidentDuration;
+    LocalDateTime accidentEndTime = LocalDateTime.now();
+
+    public enum BusState {
+        FIRE(1), JAM(1), ACCIDENT(1), TIRE(1),ALIVE(0);
+        private final int eventTime;
+        BusState(int time) {
+            this.eventTime = time;
+        }
+        public int getEventTime() {
+            return eventTime;
+        }
+    }
 
     @Override
     public Integer call() {
@@ -65,7 +83,16 @@ public class Bus extends AbstractEmitter {
             ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
             scheduler.scheduleAtFixedRate(() -> {
                 try {
-                    String message = "BUS " + name;
+
+                    if(LocalDateTime.now().isAfter(accidentEndTime)) {
+                        state = BusState.ALIVE;
+                        accidentEndTime = LocalDateTime.now();
+                        if (triggerEvent()) {
+                            getRandomEvent();
+                        }
+                    }
+
+                    String message = "BUS " + name + " " + state + " " + accidentEndTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
                     byte[] payload = message.getBytes(StandardCharsets.UTF_8);
 
@@ -77,6 +104,8 @@ public class Bus extends AbstractEmitter {
 
                     socket.send(datagram);
                 } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             }, delay, frequency, TimeUnit.MILLISECONDS);
@@ -91,5 +120,19 @@ public class Bus extends AbstractEmitter {
         }
 
         return 0;
+    }
+    public boolean triggerEvent() {
+        Random random = new Random();
+        int randomNumber = random.nextInt(5) + 1;
+        return randomNumber == 1;
+    }
+
+    public void getRandomEvent() throws InterruptedException {
+        BusState[] states = BusState.values();
+        Random random = new Random();
+        state = states[random.nextInt(states.length - 2)]; //pour enlever le alive et le gas, qui sont gerés ailleur
+        accidentDuration = Duration.ofMinutes(state.eventTime);
+        LocalDateTime now = LocalDateTime.now();
+        accidentEndTime = now.plus(accidentDuration);
     }
 }
