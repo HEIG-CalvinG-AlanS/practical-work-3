@@ -97,7 +97,7 @@ public class BusStation extends AbstractEmitter {
                 addChangesToMap(message.split(" "));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("There has been an issue while receive Multicast message. " + e);
         }
     }
 
@@ -187,7 +187,7 @@ public class BusStation extends AbstractEmitter {
                 socket.send(response);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("There has been an issue while Unicast handle. " + e);
         }
     }
 
@@ -208,7 +208,7 @@ public class BusStation extends AbstractEmitter {
             multicastThread.join();
             unicastThread.join();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println("An issue has occurred when terminating threads. " + e);
             return 1;
         }
         return 0;

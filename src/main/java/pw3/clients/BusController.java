@@ -126,7 +126,7 @@ public class BusController implements Callable<Integer> {
                 else if(!user[0].equals("QUIT")) System.out.println("No buses are currently in circulation.");
 
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("There has been an issue while Unicast handle. " + e);
                 return 1;
             }
         }

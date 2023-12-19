@@ -157,7 +157,7 @@ public class Bus extends AbstractEmitter {
             scheduler.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
             socket.leaveGroup(group, networkInterface);
         } catch (Exception e) {
-            System.out.println("There has been an isssue while sending the message. " + e);
+            System.out.println("There has been an issue while sending the message. " + e);
             return 1;
         }
         return 0;
