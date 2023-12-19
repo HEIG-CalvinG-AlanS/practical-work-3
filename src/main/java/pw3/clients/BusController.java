@@ -44,7 +44,6 @@ public class BusController implements Callable<Integer> {
         System.out.println("You can see a list of all buses :\t\tALL");
         System.out.println("You can see a list of all buses of a line :\tLINE <n° line>");
         System.out.println("You can see a list of one bus of a line :\tBUS <n° line> <n° bus>");
-        System.out.println("To exit the application :\t\tQUIT\n");
     }
 
     /**
@@ -62,14 +61,14 @@ public class BusController implements Callable<Integer> {
         String[] user = new String[3];
         user[0] = "";
 
-        while (!user[0].equals("QUIT")) {
+        while (true) {
 
             user[0] = ""; // Command
             user[1] = ""; // Line of bus
             user[2] = ""; // Numero of bus
 
             while (!user[0].equals("ALL") && !user[0].equals("LINE") &&
-                    !user[0].equals("BUS") && !user[0].equals("QUIT")) {
+                    !user[0].equals("BUS")) {
                 System.out.print("> ");
                 res = userCommand.nextLine().split(" ");
                 user[0] = res[0].toUpperCase();
@@ -111,25 +110,32 @@ public class BusController implements Callable<Integer> {
                 // Separate each bus in a table
                 String[] busInfo = response.split(",");
 
-                // Remove "OK" of the protocol
+                // Check if it's an error
+                String busInfoError = busInfo[0].split(" ")[0];
+
+                // Remove "OK" of the protocol (useless if error)
                 busInfo[0] = busInfo[0].substring(3);
 
                 // Add to the map each bus if at least one in circulation
-                if(!busInfo[0].isEmpty()) {
+                if(busInfoError.equals("ERROR")) {
+                    if(busInfo[0].split(" ")[1].equals("LINE"))
+                        System.out.println("No information on the line requested.");
+                    else
+                        System.out.println("No information on the bus requested.");
+                }
+                else {
                     for (int i = 0; i < busInfo.length; ++i) {
                         String[] bus = busInfo[i].split(" ");
                         System.out.print("Line : " + bus[1] + "\tBus : " + bus[3] + "\t State : " + bus[4]);
-                        if(!bus[4].equals("ALIVE")) System.out.print("\tBack in service at : " + bus[5] + "\n");
+                        if (!bus[4].equals("ALIVE")) System.out.print("\tBack in service at : " + bus[5] + "\n");
                         else System.out.print("\n");
                     }
                 }
-                else if(!user[0].equals("QUIT")) System.out.println("No buses are currently in circulation.");
 
             } catch (Exception e) {
                 System.out.println("There has been an issue while Unicast handle. " + e);
                 return 1;
             }
         }
-        return 0;
     }
 }

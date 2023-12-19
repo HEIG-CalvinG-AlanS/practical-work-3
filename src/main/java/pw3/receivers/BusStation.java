@@ -124,6 +124,9 @@ public class BusStation extends AbstractEmitter {
         // Add response to the requester
         String responseMessage = "OK ";
 
+        // Check if the map is empty to return an error
+        boolean isEmpty = true;
+
         // Determine the response based on the commmand
         switch (command) {
             case "ALL":
@@ -134,14 +137,25 @@ public class BusStation extends AbstractEmitter {
                 break;
             case "LINE":
                 for (String name : lastTimeBusesWereSeen.keySet())
-                    if(name.split(" ")[1].equals(line))
+                    if(name.split(" ")[1].equals(line)) {
                         responseMessage += name + " " + lastTimeBusesWereSeen.get(name) + ',';
+                        isEmpty = false;
+                    }
                 break;
             case "BUS":
                 for (String name: lastTimeBusesWereSeen.keySet())
-                    if(name.equals("LINE " + line + " BUS " + bus))
+                    if(name.equals("LINE " + line + " BUS " + bus)) {
                         responseMessage += name + " " + lastTimeBusesWereSeen.get(name) + ',';
+                        isEmpty = false;
+                    }
                 break;
+        }
+
+        // If map empty, we return an error
+        if(isEmpty)
+        {
+            if(command.equals("LINE")) responseMessage = "ERROR LINE";
+            else if (command.equals("BUS")) responseMessage = "ERROR BUS";
         }
 
         return responseMessage;
